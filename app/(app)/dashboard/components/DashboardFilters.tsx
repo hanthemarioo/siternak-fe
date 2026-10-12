@@ -1,0 +1,250 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import type { DashboardFilters, SelectOption } from "../types/dashboard";
+
+type DashboardFiltersProps = {
+    filters: DashboardFilters;
+    farms: SelectOption[];
+    flocks: SelectOption[];
+    coops: SelectOption[];
+};
+
+function optionLabel(item: SelectOption) {
+    return item.name || `#${item.id}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+}
+
+function normalizeOptions(value: unknown): SelectOption[] {
+    const rows = Array.isArray(value)
+        ? value
+        : isRecord(value) && Array.isArray(value.data)
+            ? value.data
+            : [];
+
+    return rows.flatMap((row) => {
+        if (!isRecord(row)) return [];
+
+        const id = Number(row.id);
+        if (!Number.isFinite(id)) return [];
+
+        return [{
+            id,
+            name: String(row.name ?? row.house_code ?? row.code ?? id),
+        }];
+    });
+}
+
+async function fetchOptions(path: string, query: Record<string, string>) {
+    const params = new URLSearchParams(query);
+    const res = await fetch(`/api/proxy/${path}?${params.toString()}`);
+
+    if (!res.ok) return [];
+    return normalizeOptions((await res.json()).data);
+}
+
+export default function DashboardFilters({ filters, farms, flocks, coops }: DashboardFiltersProps) {
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const [type, setType] = useState(filters.type);
+    const [startDate, setStartDate] = useState(filters.start_date);
+    const [endDate, setEndDate] = useState(filters.end_date);
+    const [farmId, setFarmId] = useState(filters.farm_id ?? "");
+    const [flockId, setFlockId] = useState(filters.flock_id ?? "");
+    const [coopId, setCoopId] = useState(filters.coop_id ?? "");
+    const [farmOptions, setFarmOptions] = useState(farms);
+    const [flockOptions, setFlockOptions] = useState(flocks);
+    const [coopOptions, setCoopOptions] = useState(coops);
+    const [loadingKey, setLoadingKey] = useState<"farm" | "flock" | "coop" | null>(null);
+    const [filterError, setFilterError] = useState<string | null>(null);
+    const [isPending, startTransition] = useTransition();
+
+    const hasInvalidDateRange = startDate !== "" && endDate !== "" && startDate > endDate;
+
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        if (hasInvalidDateRange) {
+            setFilterError("Start Date tidak boleh lebih besar dari End Date.");
+            return;
+        }
+
+        const params = new URLSearchParams();
+        params.set("type", type);
+
+        if (startDate) params.set("start_date", startDate);
+        if (endDate) params.set("end_date", endDate);
+        if (farmId) params.set("farm_id", farmId);
+        if (flockId) params.set("flock_id", flockId);
+        if (coopId) params.set("coop_id", coopId);
+
+        setFilterError(null);
+
+        startTransition(() => {
+            router.push(`${pathname}?${params.toString()}`);
+            router.refresh();
+        });
+    };
+
+    const handleTypeChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+        const nextType = event.target.value;
+
+        setType(nextType);
+        setFilterError(null);
+        setFarmId("");
+        setFlockId("");
+        setCoopId("");
+        setFlockOptions([]);
+        setCoopOptions([]);
+        setLoadingKey("farm");
+        setFarmOptions(await fetchOptions("farms", { type: nextType }));
+        setLoadingKey(null);
+    };
+
+    const handleFarmChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+        const nextFarmId = event.target.value;
+
+        setFarmId(nextFarmId);
+        setFilterError(null);
+        setFlockId("");
+        setCoopId("");
+        setCoopOptions([]);
+
+        if (!nextFarmId) {
+            setFlockOptions([]);
+            return;
+        }
+
+        setLoadingKey("flock");
+        setFlockOptions(await fetchOptions("flocks", { farm_id: nextFarmId }));
+        setLoadingKey(null);
+    };
+
+    const handleFlockChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+        const nextFlockId = event.target.value;
+
+        setFlockId(nextFlockId);
+        setFilterError(null);
+        setCoopId("");
+
+        if (!nextFlockId) {
+            setCoopOptions([]);
+            return;
+        }
+
+        setLoadingKey("coop");
+        setCoopOptions(await fetchOptions("coops", { flock_id: nextFlockId }));
+        setLoadingKey(null);
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="grid gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm md:grid-cols-6">
+            <label className="space-y-1 text-sm font-medium text-gray-700">
+                Type
+                <select name="type" value={type} onChange={handleTypeChange} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                    <option value="layer">Layer</option>
+                    <option value="grower">Grower</option>
+                </select>
+            </label>
+
+            <label className="space-y-1 text-sm font-medium text-gray-700">
+                Start Date
+                <input
+                    name="start_date"
+                    type="date"
+                    value={startDate}
+                    max={endDate || undefined}
+                    aria-invalid={hasInvalidDateRange}
+                    onChange={(event) => {
+                        setStartDate(event.target.value);
+                        setFilterError(null);
+                    }}
+                    className={`w-full rounded-lg border px-3 py-2 text-sm ${
+                        hasInvalidDateRange ? "border-red-400 bg-red-50" : "border-gray-300"
+                    }`}
+                />
+            </label>
+
+            <label className="space-y-1 text-sm font-medium text-gray-700">
+                End Date
+                <input
+                    name="end_date"
+                    type="date"
+                    value={endDate}
+                    min={startDate || undefined}
+                    aria-invalid={hasInvalidDateRange}
+                    onChange={(event) => {
+                        setEndDate(event.target.value);
+                        setFilterError(null);
+                    }}
+                    className={`w-full rounded-lg border px-3 py-2 text-sm ${
+                        hasInvalidDateRange ? "border-red-400 bg-red-50" : "border-gray-300"
+                    }`}
+                />
+            </label>
+
+            <label className="space-y-1 text-sm font-medium text-gray-700">
+                Farm
+                <select name="farm_id" value={farmId} onChange={handleFarmChange} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                    <option value="">{loadingKey === "farm" ? "Loading farms..." : "All farms"}</option>
+                    {farmOptions.map((farm) => (
+                        <option key={farm.id} value={farm.id}>{optionLabel(farm)}</option>
+                    ))}
+                </select>
+            </label>
+
+            <label className="space-y-1 text-sm font-medium text-gray-700">
+                Flock
+                <select name="flock_id" value={flockId} onChange={handleFlockChange} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                    <option value="">{loadingKey === "flock" ? "Loading flocks..." : "All flocks"}</option>
+                    {flockOptions.map((flock) => (
+                        <option key={flock.id} value={flock.id}>{optionLabel(flock)}</option>
+                    ))}
+                </select>
+            </label>
+
+            <label className="space-y-1 text-sm font-medium text-gray-700">
+                Coop
+                <select
+                    name="coop_id"
+                    value={coopId}
+                    onChange={(event) => {
+                        setCoopId(event.target.value);
+                        setFilterError(null);
+                    }}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                >
+                    <option value="">{loadingKey === "coop" ? "Loading coops..." : "All coops"}</option>
+                    {coopOptions.map((coop) => (
+                        <option key={coop.id} value={coop.id}>{optionLabel(coop)}</option>
+                    ))}
+                </select>
+            </label>
+
+            <div className="flex items-end gap-2 md:col-span-6">
+                <button
+                    type="submit"
+                    disabled={isPending}
+                    className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    {isPending ? "Loading..." : "Apply Filter"}
+                </button>
+                <a href="/dashboard" className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                    Reset
+                </a>
+            </div>
+
+            {(hasInvalidDateRange || filterError) && (
+                <p className="text-sm font-medium text-red-600 md:col-span-6">
+                    {filterError ?? "Start Date tidak boleh lebih besar dari End Date."}
+                </p>
+            )}
+        </form>
+    );
+}
