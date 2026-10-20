@@ -21,6 +21,7 @@ type MenuItem = {
     children?: {
         label: string;
         href: string;
+        farmType?: "layer" | "grower";
     }[];
 };
 
@@ -53,8 +54,8 @@ const MENU: MenuItem[] = [
         icon: "plus-circle",
         key: "produksi",
         children: [
-            { label: "Fase Layer", href: "/production/layers" },
-            { label: "Fase Grower", href: "/production/growers" },
+            { label: "Fase Layer", href: "/production/layers", farmType: "layer" },
+            { label: "Fase Grower", href: "/production/growers", farmType: "grower" },
         ],
     },
     {
@@ -62,8 +63,8 @@ const MENU: MenuItem[] = [
         icon: "file-text",
         key: "report",
         children: [
-            { label: "Report Fase Layer", href: "/report/layers" },
-            { label: "Report Fase Grower", href: "/report/growers" },
+            { label: "Report Fase Layer", href: "/report/layers", farmType: "layer" },
+            { label: "Report Fase Grower", href: "/report/growers", farmType: "grower" },
         ],
     },
 ];
@@ -71,13 +72,31 @@ const MENU: MenuItem[] = [
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
     const [role, setRole] = useState<string | null>(null);
+    const [farmType, setFarmType] = useState<"layer" | "grower" | null>(null);
     const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>(
         {}
     );
 
     const visibleMenu = useMemo(() => {
-        return MENU.filter((item) => !item.roles || (role && item.roles.includes(role)));
-    }, [role]);
+        return MENU
+            .filter((item) => !item.roles || (role && item.roles.includes(role)))
+            .map((item) => {
+                if (!item.children) return item;
+
+                if (role === "super_admin") return item;
+
+                const filteredChildren = item.children.filter((child) => {
+                    if (!child.farmType) return true;
+                    return child.farmType === farmType;
+                });
+
+                return {
+                    ...item,
+                    children: filteredChildren,
+                };
+            })
+            .filter((item) => !item.children || item.children.length > 0);
+    }, [role, farmType]);
 
     const isActive = (path: string) => pathname.startsWith(path);
 
@@ -106,7 +125,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     useEffect(() => {
         const data = localStorage.getItem("user");
         if (data) {
-            setRole(JSON.parse(data)?.role ?? null);
+            const user = JSON.parse(data);
+            setRole(user?.role ?? null);
+            setFarmType(user?.farm?.type ?? null);
         }
     }, []);
 
