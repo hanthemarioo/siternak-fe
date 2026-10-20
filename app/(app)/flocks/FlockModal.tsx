@@ -5,6 +5,7 @@ import { Flock } from "@/types/flock";
 import { Input } from "@/components/form/Input";
 import { Option, Select } from "@/components/form/Select";
 import { Farm } from "@/types/farm";
+import { CoopFormSection, CoopFormItem } from "./CoopFormSection";
 
 interface FlockModalProps {
     flock: Flock | null;
@@ -42,7 +43,7 @@ export function FlockModal({ flock, onClose, onSuccess }: FlockModalProps) {
     });
 
     // State khusus untuk array dinamis kandang (coops)
-    const [coops, setCoops] = useState<{ name: string; initial_population: number | "" }[]>(
+    const [coops, setCoops] = useState<CoopFormItem[]>(
         flock?.coops || []
     );
 
@@ -50,7 +51,6 @@ export function FlockModal({ flock, onClose, onSuccess }: FlockModalProps) {
     useEffect(() => {
         const fetchFarms = async () => {
             try {
-                // Sesuaikan endpoint ini dengan endpoint API list farm kamu
                 const res = await fetch("/api/proxy/farms");
 
                 if (res.ok) {
@@ -60,6 +60,10 @@ export function FlockModal({ flock, onClose, onSuccess }: FlockModalProps) {
                         value: farm.id.toString(),
                     }));
                     setFarmOptions(options);
+
+                    if (options.length === 1 && !isEditing) {
+                        setForm((prev) => ({ ...prev, farm_id: options[0].value }));
+                    }
                 }
             } catch (err) {
                 console.error("Gagal mengambil data farm:", err);
@@ -67,7 +71,7 @@ export function FlockModal({ flock, onClose, onSuccess }: FlockModalProps) {
         };
 
         fetchFarms();
-    }, []);
+    }, [isEditing]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -159,6 +163,12 @@ export function FlockModal({ flock, onClose, onSuccess }: FlockModalProps) {
                     </button>
                 </div>
 
+                {isEditing && (
+                    <div className="text-xs bg-blue-50 text-blue-700 p-3 rounded-lg border border-blue-200">
+                        Hanya nama flock yang dapat diubah untuk menjaga integritas data produksi.
+                    </div>
+                )}
+
                 {error && (
                     <p className="text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                         {error}
@@ -247,48 +257,13 @@ export function FlockModal({ flock, onClose, onSuccess }: FlockModalProps) {
 
                     <hr className="my-4 border-gray-200" />
 
-                    {/* Bagian Dynamic Coops */}
-                    <div className="space-y-3">
-                        {!isEditing && <div className="flex gap-2">
-                            <button
-                                type="button"
-                                onClick={handleAddCoop}
-                                className="bg-[#2ecc71] hover:bg-[#27ae60] text-white px-3 py-1.5 rounded-lg flex items-center transition-colors"
-                            >
-                                Tambah Kandang <span className="ml-1 text-lg leading-none">+</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleResetCoops}
-                                className="bg-[#ff4757] hover:bg-[#ff6b81] text-white px-3 py-1.5 rounded-lg transition-colors"
-                            >
-                                Reset Kandang
-                            </button>
-                        </div>}
-
-                        <div className="space-y-2 mt-4">
-                            {coops.map((coop, index) => (
-                                <div
-                                    key={index}
-                                    className="flex rounded border border-gray-200 overflow-hidden shadow-sm"
-                                >
-                                    <div className="bg-gray-100 text-gray-600 px-4 py-2 border-r border-gray-200 flex items-center min-w-[120px] justify-center text-sm">
-                                        {coop.name}
-                                    </div>
-                                    <input
-                                        readOnly={isEditing}
-                                        type="number"
-                                        min="0"
-                                        className="flex-1 px-4 py-2 text-sm outline-none focus:bg-gray-50 transition-colors"
-                                        placeholder="Jumlah Ayam"
-                                        value={coop.initial_population}
-                                        onChange={(e) => handleCoopChange(index, e.target.value)}
-                                        required
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    <CoopFormSection
+                        coops={coops}
+                        isEditing={isEditing}
+                        onAdd={handleAddCoop}
+                        onReset={handleResetCoops}
+                        onChange={handleCoopChange}
+                    />
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-6">

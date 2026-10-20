@@ -12,12 +12,26 @@ export function createFlockTableColumns(
     return [
         // { key: "id", label: "ID" },
         {
+            key: "farm",
+            label: "Farm",
+            render: (_val, row) => <span className="font-medium text-xs text-gray-700">{row.farm?.name || "-"}</span>,
+        },
+        {
             key: "name",
             label: "Flock Name",
             render: (val) => <span className="font-medium text-gray-900">{val}</span>,
         },
-        { key: "house_code", label: "Kode kandang" },
-        { key: "age_in_day", label: "Umur dalam hari" },
+        { key: "house_code", label: "House Code" },
+        {
+            key: "coops",
+            label: "Kandang",
+            render: (_val, row) => (
+                <span className="text-xs text-gray-600">
+                    {row.coops?.length ? row.coops.map((c) => c.name).join(", ") : "-"}
+                </span>
+            ),
+        },
+        { key: "age_in_day", label: "Umur (hari)" },
         { key: "strain", label: "Strain" },
         {
             key: "status",
