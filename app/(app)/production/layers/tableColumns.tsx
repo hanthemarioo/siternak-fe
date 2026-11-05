@@ -5,9 +5,13 @@ import { formatDate } from "@/lib/formatDate";
 import { Coop } from "@/types/coop";
 import { LayerEggProduction, LayerProduction } from "@/types/layer-production";
 
+function textValue(value: string | number | null | undefined) {
+    if (value === null || value === undefined || String(value).trim() === "") return "-";
+    return `${value}`;
+}
+
 export function createLayerProductionTableColumns(onEdit: (layerProduction: LayerProduction) => void): TableColumn<LayerProduction>[] {
     return [
-        // { key: "id", label: "ID" },
         {
             key: "date",
             label: "Tanggal",
@@ -20,70 +24,70 @@ export function createLayerProductionTableColumns(onEdit: (layerProduction: Laye
             label: "Peternakan",
             render: (value: Coop) => (
                 <span className="font-medium text-gray-900">{value.flock.farm.name}</span>
-            )
+            ),
         },
         {
             key: "coop",
             label: "Nama Flock",
             render: (value: Coop) => (
                 <span className="font-medium text-gray-900">{value.flock.name}</span>
-            )
+            ),
         },
         {
             key: "coop",
             label: "Kandang",
             render: (value: Coop) => (
                 <span className="font-medium text-gray-900">{value.name}</span>
-            )
+            ),
         },
         {
             key: "daily_egg_production",
             label: "Telur Layak Jual",
             render: (value: LayerEggProduction | null) => (
                 <span>{value?.marketable_eggs_count ?? "-"}</span>
-            )
+            ),
         },
         {
             key: "daily_egg_production",
             label: "Telur Sortir",
             render: (value: LayerEggProduction | null) => (
                 <span>{value?.sorted_eggs_count ?? "-"}</span>
-            )
+            ),
         },
         {
             key: "daily_egg_production",
             label: "Telur Busuk",
             render: (value: LayerEggProduction | null) => (
                 <span>{value?.spoiled_eggs_count ?? "-"}</span>
-            )
+            ),
         },
         {
             key: "daily_egg_production",
             label: "Telur Rusak",
             render: (value: LayerEggProduction | null) => (
                 <span>{value?.broken_eggs_count ?? "-"}</span>
-            )
+            ),
         },
         {
             key: "feed_kg",
             label: "Pakan",
             render: (value: string) => (
                 <span>{value} kg</span>
-            )
+            ),
         },
         {
             key: "water_l",
             label: "Minum",
             render: (value: string) => (
                 <span>{value} l</span>
-            )
+            ),
         },
         {
             key: "avg_body_weight_kg",
             label: "Bobot",
             render: (value: string) => (
                 <span>{value} kg</span>
-            )
+            ),
         },
         {
             key: "mortality_count",
@@ -92,6 +96,34 @@ export function createLayerProductionTableColumns(onEdit: (layerProduction: Laye
         {
             key: "culling_count",
             label: "Afkir",
+        },
+        {
+            key: "feed_name",
+            label: "Nama Pakan",
+            render: (value: string | null | undefined) => (
+                <span>{textValue(value)}</span>
+            ),
+        },
+        {
+            key: "medicine_vitamin",
+            label: "Obat / Vitamin",
+            render: (value: string | null | undefined) => (
+                <span>{textValue(value)}</span>
+            ),
+        },
+        {
+            key: "vaccine",
+            label: "Vaksin",
+            render: (value: string | null | undefined) => (
+                <span>{textValue(value)}</span>
+            ),
+        },
+        {
+            key: "notes",
+            label: "Perlakuan / Catatan",
+            render: (value: string | null | undefined) => (
+                <span>{textValue(value)}</span>
+            ),
         },
         {
             key: "actions",

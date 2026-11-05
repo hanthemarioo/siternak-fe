@@ -37,6 +37,10 @@ type FormState = {
     spoiled_eggs_weight_kg: string;
     broken_eggs_count: string;
     broken_eggs_weight_kg: string;
+    feed_name: string;
+    medicine_vitamin: string;
+    vaccine: string;
+    notes: string;
 };
 
 type SelectField = "farm_id" | "flock_id" | "coop_id";
@@ -72,12 +76,10 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<ProductionFieldErrors<FormField>>({});
 
-    // State untuk opsi farm yang didapat dari API
     const [farmOptions, setFarmOptions] = useState<Option[]>([]);
     const [flockOptions, setFlockOptions] = useState<Option[]>([]);
     const [coopOptions, setCoopOptions] = useState<Option[]>([]);
 
-    // State untuk form utama
     const [form, setForm] = useState<FormState>({
         farm_id: layerProduction?.coop?.flock?.farm?.id.toString() || "",
         flock_id: layerProduction?.coop?.flock?.id.toString() || "",
@@ -95,6 +97,10 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
         spoiled_eggs_weight_kg: fieldValue(eggProduction?.spoiled_eggs_weight_kg ?? layerProduction?.spoiled_eggs_weight_kg),
         broken_eggs_count: fieldValue(eggProduction?.broken_eggs_count ?? layerProduction?.broken_eggs_count),
         broken_eggs_weight_kg: fieldValue(eggProduction?.broken_eggs_weight_kg ?? layerProduction?.broken_eggs_weight_kg),
+        feed_name: fieldValue(layerProduction?.feed_name),
+        medicine_vitamin: fieldValue(layerProduction?.medicine_vitamin),
+        vaccine: fieldValue(layerProduction?.vaccine),
+        notes: fieldValue(layerProduction?.notes),
     });
 
     const fieldDependencies: Partial<Record<SelectField, SelectField[]>> = {
@@ -102,7 +108,6 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
         flock_id: ["coop_id"],
     };
 
-    // Fetch data farm saat komponen dimuat
     useEffect(() => {
         const fetchFarms = async () => {
             try {
@@ -112,20 +117,16 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
                     const data = (await res.json()).data;
 
                     if (data.length === 0) {
-                        const options = [{
-                            label: "Farm tidak ditemukan!",
-                            value: "",
-                            disabled: true,
-                        }];
-                        setFarmOptions(options);
+                        setFarmOptions([{ label: "Farm tidak ditemukan!", value: "", disabled: true }]);
                         return;
                     }
 
-                    const options = data.map((farm: Farm) => ({
-                        label: farm.name,
-                        value: farm.id.toString(),
-                    }));
-                    setFarmOptions(options);
+                    setFarmOptions(
+                        data.map((farm: Farm) => ({
+                            label: farm.name,
+                            value: farm.id.toString(),
+                        }))
+                    );
                 }
             } catch (err) {
                 console.error("Gagal mengambil data farm:", err);
@@ -135,7 +136,6 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
         fetchFarms();
     }, []);
 
-    // Fetch data flock setelah fetch data farm
     useEffect(() => {
         if (form.farm_id === "") return;
 
@@ -147,20 +147,16 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
                     const data = (await res.json()).data;
 
                     if (data.length === 0) {
-                        const options = [{
-                            label: "Flock tidak ditemukan!",
-                            value: "",
-                            disabled: true,
-                        }];
-                        setFlockOptions(options);
+                        setFlockOptions([{ label: "Flock tidak ditemukan!", value: "", disabled: true }]);
                         return;
                     }
 
-                    const options = data.map((flock: Flock) => ({
-                        label: flock.name,
-                        value: flock.id.toString(),
-                    }));
-                    setFlockOptions(options);
+                    setFlockOptions(
+                        data.map((flock: Flock) => ({
+                            label: flock.name,
+                            value: flock.id.toString(),
+                        }))
+                    );
                 }
             } catch (err) {
                 console.error("Gagal mengambil data flock:", err);
@@ -170,7 +166,6 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
         fetchFlocks();
     }, [form.farm_id]);
 
-    // Fetch data coop setelah fetch data flock
     useEffect(() => {
         if (form.flock_id === "") return;
 
@@ -182,20 +177,16 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
                     const data = (await res.json()).data;
 
                     if (data.length === 0) {
-                        const options = [{
-                            label: "Kandang tidak ditemukan!",
-                            value: "",
-                            disabled: true,
-                        }];
-                        setCoopOptions(options);
+                        setCoopOptions([{ label: "Kandang tidak ditemukan!", value: "", disabled: true }]);
                         return;
                     }
 
-                    const options = data.map((coop: Coop) => ({
-                        label: coop.name,
-                        value: coop.id.toString(),
-                    }));
-                    setCoopOptions(options);
+                    setCoopOptions(
+                        data.map((coop: Coop) => ({
+                            label: coop.name,
+                            value: coop.id.toString(),
+                        }))
+                    );
                 }
             } catch (err) {
                 console.error("Gagal mengambil data coop:", err);
@@ -207,7 +198,6 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-
         const fieldName = name as keyof FormState;
 
         setForm((prev) => {
@@ -257,7 +247,6 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
         setError(null);
         setFieldErrors({});
 
-        // Susun payload sesuai dengan struktur JSON yang diminta
         const payload = {
             ...form,
             coop_id: Number(form.coop_id),
@@ -274,6 +263,10 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
             spoiled_eggs_weight_kg: Number(form.spoiled_eggs_weight_kg),
             broken_eggs_count: Number(form.broken_eggs_count),
             broken_eggs_weight_kg: Number(form.broken_eggs_weight_kg),
+            feed_name: form.feed_name.trim() || null,
+            medicine_vitamin: form.medicine_vitamin.trim() || null,
+            vaccine: form.vaccine.trim() || null,
+            notes: form.notes.trim() || null,
         };
 
         const url = isEditing ? `/api/proxy/layer-phases/${layerProduction.id}` : "/api/proxy/layer-phases";
@@ -291,9 +284,9 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
                 throw new Error(errData?.message || "Gagal menyimpan Layer Production.");
             }
 
-            onSuccess(); // Refresh & tutup modal
+            onSuccess();
         } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'Unknown error');
+            setError(err instanceof Error ? err.message : "Unknown error");
         } finally {
             setSubmitting(false);
         }
@@ -301,7 +294,6 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            {/* Ditambahkan max-h-[90vh] dan overflow-y-auto agar modal bisa di-scroll jika field banyak */}
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-5 max-h-[90vh] overflow-y-auto flex flex-col">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold text-gray-800">
@@ -463,69 +455,113 @@ export function LayerProductionModal({ layerProduction, onClose, onSuccess }: La
                         />
                     </div>
 
-                    <Input
-                        type="number"
-                        label="Pakan Kg"
-                        name="feed_kg"
-                        value={form.feed_kg}
-                        onChange={handleChange}
-                        placeholder="Contoh: 50.20"
-                        min={0.01}
-                        step="any"
-                        error={fieldErrors.feed_kg}
-                        required
-                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            type="number"
+                            label="Pakan Kg"
+                            name="feed_kg"
+                            value={form.feed_kg}
+                            onChange={handleChange}
+                            placeholder="Contoh: 50.20"
+                            min={0.01}
+                            step="any"
+                            error={fieldErrors.feed_kg}
+                            required
+                        />
+
+                        <Input
+                            type="number"
+                            label="Minum L"
+                            name="water_l"
+                            value={form.water_l}
+                            onChange={handleChange}
+                            placeholder="Contoh: 50.20"
+                            min={0.01}
+                            step="any"
+                            error={fieldErrors.water_l}
+                            required
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            type="number"
+                            label="Bobot Ayam Kg"
+                            name="avg_body_weight_kg"
+                            value={form.avg_body_weight_kg}
+                            onChange={handleChange}
+                            placeholder="Contoh: 1.90"
+                            min={0.01}
+                            step="any"
+                            error={fieldErrors.avg_body_weight_kg}
+                            required
+                        />
+
+                        <Input
+                            type="text"
+                            label="Nama Pakan"
+                            name="feed_name"
+                            value={form.feed_name}
+                            onChange={handleChange}
+                            placeholder="Contoh: Layer Komplit L-1"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            type="number"
+                            label="Kematian"
+                            name="mortality_count"
+                            value={form.mortality_count}
+                            onChange={handleChange}
+                            placeholder="Contoh: 0"
+                            min={0}
+                            step={1}
+                            error={fieldErrors.mortality_count}
+                            required
+                        />
+
+                        <Input
+                            type="number"
+                            label="Afkir"
+                            name="culling_count"
+                            value={form.culling_count}
+                            onChange={handleChange}
+                            placeholder="Contoh: 0"
+                            min={0}
+                            step={1}
+                            error={fieldErrors.culling_count}
+                            required
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <Input
+                            type="text"
+                            label="Obat / Vitamin"
+                            name="medicine_vitamin"
+                            value={form.medicine_vitamin}
+                            onChange={handleChange}
+                            placeholder="Contoh: Vita Stress"
+                        />
+
+                        <Input
+                            type="text"
+                            label="Vaksin"
+                            name="vaccine"
+                            value={form.vaccine}
+                            onChange={handleChange}
+                            placeholder="Contoh: ND Lasota"
+                        />
+                    </div>
 
                     <Input
-                        type="number"
-                        label="Minum L"
-                        name="water_l"
-                        value={form.water_l}
+                        type="text"
+                        label="Perlakuan / Catatan"
+                        name="notes"
+                        value={form.notes}
                         onChange={handleChange}
-                        placeholder="Contoh: 50.20"
-                        min={0.01}
-                        step="any"
-                        error={fieldErrors.water_l}
-                        required
-                    />
-
-                    <Input
-                        type="number"
-                        label="Bobot Ayam Kg"
-                        name="avg_body_weight_kg"
-                        value={form.avg_body_weight_kg}
-                        onChange={handleChange}
-                        placeholder="Contoh: 2.500"
-                        min={0.01}
-                        step="any"
-                        error={fieldErrors.avg_body_weight_kg}
-                        required
-                    />
-
-                    <Input
-                        type="number"
-                        label="Kematian"
-                        name="mortality_count"
-                        value={form.mortality_count}
-                        onChange={handleChange}
-                        placeholder="Contoh: 0"
-                        min={0}
-                        step={1}
-                        error={fieldErrors.mortality_count}
-                        required
-                    />
-
-                    <Input
-                        type="number"
-                        label="Afkir"
-                        name="culling_count"
-                        value={form.culling_count}
-                        onChange={handleChange}
-                        placeholder="Contoh: 0"
-                        min={0}
-                        step={1}
-                        error={fieldErrors.culling_count}
-                        required
+                        placeholder="Contoh: Pemberian kalsium tambahan"
                     />
                 </div>
 

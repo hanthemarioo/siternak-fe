@@ -5,9 +5,13 @@ import { formatDate } from "@/lib/formatDate";
 import { Coop } from "@/types/coop";
 import { GrowerProduction } from "@/types/grower-production";
 
+function textValue(value: string | number | null | undefined, suffix = "") {
+    if (value === null || value === undefined || String(value).trim() === "") return "-";
+    return `${value}${suffix}`;
+}
+
 export function createGrowerProductionTableColumns(onEdit: (growerProduction: GrowerProduction) => void): TableColumn<GrowerProduction>[] {
     return [
-        // { key: "id", label: "ID" },
         {
             key: "date",
             label: "Tanggal",
@@ -20,42 +24,56 @@ export function createGrowerProductionTableColumns(onEdit: (growerProduction: Gr
             label: "Peternakan",
             render: (value: Coop) => (
                 <span className="font-medium text-gray-900">{value.flock.farm.name}</span>
-            )
+            ),
         },
         {
             key: "coop",
             label: "Nama Flock",
             render: (value: Coop) => (
                 <span className="font-medium text-gray-900">{value.flock.name}</span>
-            )
+            ),
         },
         {
             key: "coop",
             label: "Kandang",
             render: (value: Coop) => (
                 <span className="font-medium text-gray-900">{value.name}</span>
-            )
+            ),
         },
         {
             key: "feed_kg",
             label: "Pakan",
             render: (value: string) => (
                 <span>{value} kg</span>
-            )
+            ),
         },
         {
             key: "water_l",
             label: "Minum",
             render: (value: string) => (
                 <span>{value} l</span>
-            )
+            ),
         },
         {
             key: "avg_body_weight_kg",
             label: "Bobot",
             render: (value: string) => (
                 <span>{value} kg</span>
-            )
+            ),
+        },
+        {
+            key: "temperature_c",
+            label: "Suhu",
+            render: (value: string | number | null | undefined) => (
+                <span>{textValue(value, " °C")}</span>
+            ),
+        },
+        {
+            key: "uniformity_percent",
+            label: "Uniformity",
+            render: (value: string | number | null | undefined) => (
+                <span>{textValue(value, "%")}</span>
+            ),
         },
         {
             key: "mortality_count",
@@ -64,6 +82,34 @@ export function createGrowerProductionTableColumns(onEdit: (growerProduction: Gr
         {
             key: "culling_count",
             label: "Afkir",
+        },
+        {
+            key: "feed_name",
+            label: "Nama Pakan",
+            render: (value: string | null | undefined) => (
+                <span>{textValue(value)}</span>
+            ),
+        },
+        {
+            key: "medicine_vitamin",
+            label: "Obat / Vitamin",
+            render: (value: string | null | undefined) => (
+                <span>{textValue(value)}</span>
+            ),
+        },
+        {
+            key: "vaccine",
+            label: "Vaksin",
+            render: (value: string | null | undefined) => (
+                <span>{textValue(value)}</span>
+            ),
+        },
+        {
+            key: "notes",
+            label: "Perlakuan / Catatan",
+            render: (value: string | null | undefined) => (
+                <span>{textValue(value)}</span>
+            ),
         },
         {
             key: "actions",

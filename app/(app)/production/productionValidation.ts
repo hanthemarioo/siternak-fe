@@ -3,6 +3,9 @@ export type ProductionFieldRule<T extends string> = {
     label: string;
     integer?: boolean;
     allowZero?: boolean;
+    optional?: boolean;
+    min?: number;
+    max?: number;
 };
 
 export type ProductionFieldErrors<T extends string> = Partial<Record<T, string>>;
@@ -18,7 +21,9 @@ export function validateProductionFields<T extends Record<string, string | numbe
         const value = rawValue === null || rawValue === undefined ? "" : String(rawValue).trim();
 
         if (value === "") {
-            errors[rule.name] = `${rule.label} wajib diisi.`;
+            if (!rule.optional) {
+                errors[rule.name] = `${rule.label} wajib diisi.`;
+            }
             return;
         }
 
@@ -34,6 +39,16 @@ export function validateProductionFields<T extends Record<string, string | numbe
             return;
         }
 
+        if (rule.min !== undefined && numberValue < rule.min) {
+            errors[rule.name] = `${rule.label} minimal ${rule.min}.`;
+            return;
+        }
+
+        if (rule.max !== undefined && numberValue > rule.max) {
+            errors[rule.name] = `${rule.label} maksimal ${rule.max}.`;
+            return;
+        }
+
         if (rule.allowZero) {
             if (numberValue < 0) {
                 errors[rule.name] = `${rule.label} tidak boleh negatif.`;
@@ -41,7 +56,7 @@ export function validateProductionFields<T extends Record<string, string | numbe
             return;
         }
 
-        if (numberValue <= 0) {
+        if (rule.min === undefined && numberValue <= 0) {
             errors[rule.name] = `${rule.label} harus lebih dari 0.`;
         }
     });

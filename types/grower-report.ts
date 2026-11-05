@@ -28,10 +28,12 @@ export type GrowerReportRow = {
     water_ml_per_bird: number;
     actual_body_weight_g: number;
     standard_body_weight_g: number | null;
+    temperature_c: number | null;
     actual_uniformity_percent: number | null;
     standard_uniformity_percent: number | null;
     feed_name: string | null;
     medicine_vitamin: string | null;
+    vaccine: string | null;
     notes: string | null;
 };
 

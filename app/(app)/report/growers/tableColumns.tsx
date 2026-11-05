@@ -7,6 +7,11 @@ function numberText(value: number | null | undefined, suffix = "") {
     return `${value.toLocaleString("id-ID")}${suffix}`;
 }
 
+function stringText(value: string | null | undefined) {
+    if (!value || value.trim() === "") return "-";
+    return value;
+}
+
 export function createGrowerReportTableColumns(): TableColumn<GrowerReportRow>[] {
     return [
         {
@@ -72,9 +77,34 @@ export function createGrowerReportTableColumns(): TableColumn<GrowerReportRow>[]
             render: (value: number | null) => <span>{numberText(value, " g")}</span>,
         },
         {
+            key: "temperature_c",
+            label: "Suhu",
+            render: (value: number | null) => <span>{numberText(value, " °C")}</span>,
+        },
+        {
             key: "actual_uniformity_percent",
             label: "Uniformity",
             render: (value: number | null) => <span>{numberText(value, "%")}</span>,
+        },
+        {
+            key: "feed_name",
+            label: "Nama Pakan",
+            render: (value: string | null) => <span>{stringText(value)}</span>,
+        },
+        {
+            key: "medicine_vitamin",
+            label: "Obat / Vitamin",
+            render: (value: string | null) => <span>{stringText(value)}</span>,
+        },
+        {
+            key: "vaccine",
+            label: "Vaksin",
+            render: (value: string | null) => <span>{stringText(value)}</span>,
+        },
+        {
+            key: "notes",
+            label: "Perlakuan / Catatan",
+            render: (value: string | null) => <span>{stringText(value)}</span>,
         },
     ];
 }

@@ -31,6 +31,10 @@ export type LayerProduction = {
     spoiled_eggs_weight_kg?: string | number;
     broken_eggs_count?: string | number;
     broken_eggs_weight_kg?: string | number;
+    feed_name?: string | null;
+    medicine_vitamin?: string | null;
+    vaccine?: string | null;
+    notes?: string | null;
     daily_egg_production?: LayerEggProduction | null;
     coop: Coop;
 };

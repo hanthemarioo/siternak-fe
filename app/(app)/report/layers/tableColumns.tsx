@@ -7,6 +7,11 @@ function numberText(value: number | null | undefined, suffix = "") {
     return `${value.toLocaleString("id-ID")}${suffix}`;
 }
 
+function stringText(value: string | null | undefined) {
+    if (!value || value.trim() === "") return "-";
+    return value;
+}
+
 export function createLayerReportTableColumns(): TableColumn<LayerReportRow>[] {
     return [
         {
@@ -90,6 +95,26 @@ export function createLayerReportTableColumns(): TableColumn<LayerReportRow>[] {
             key: "fcr",
             label: "FCR",
             render: (value: number) => <span>{numberText(value)}</span>,
+        },
+        {
+            key: "feed_name",
+            label: "Nama Pakan",
+            render: (value: string | null) => <span>{stringText(value)}</span>,
+        },
+        {
+            key: "medicine_vitamin",
+            label: "Obat / Vitamin",
+            render: (value: string | null) => <span>{stringText(value)}</span>,
+        },
+        {
+            key: "vaccine",
+            label: "Vaksin",
+            render: (value: string | null) => <span>{stringText(value)}</span>,
+        },
+        {
+            key: "notes",
+            label: "Perlakuan / Catatan",
+            render: (value: string | null) => <span>{stringText(value)}</span>,
         },
     ];
 }

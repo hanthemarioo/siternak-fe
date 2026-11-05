@@ -1,4 +1,4 @@
-// types/grower-prduction.ts
+// types/grower-production.ts
 
 import { Coop } from "./coop";
 
@@ -12,5 +12,11 @@ export type GrowerProduction = {
     avg_body_weight_kg: string | number;
     mortality_count: string | number;
     culling_count: string | number;
+    temperature_c?: string | number | null;
+    uniformity_percent?: string | number | null;
+    feed_name?: string | null;
+    medicine_vitamin?: string | null;
+    vaccine?: string | null;
+    notes?: string | null;
     coop: Coop;
 };
